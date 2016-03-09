@@ -46,10 +46,14 @@
 
 (define all (append hired-output alum-output))
 
-(define (person-duration l)
+(define (years l)
   (for/list (((x) (in-list l)))
-      (list (first x)
-            (years-between (third x) (second x)))))
+      (years-between (third x) (second x))))
+
+(define (average l)
+  (exact->inexact (/ (apply + l) (length l))))
  
-(dump (person-duration all))
+(define ylist (years all))
+
+(dump (average ylist))
 
