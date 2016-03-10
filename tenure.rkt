@@ -3,6 +3,7 @@
 (require json
          net/http-client
          racket/date)
+
 (date-display-format 'iso-8601)
 
 (define (dump a b) (printf "~a ~a~%" a b))
@@ -30,9 +31,9 @@
 (define (good-date? property)
   (equal? default-date property))
 
-(define (service-length l)
+(define (tenure l)
   (for/list (((x) (in-list l)))
-    (define-values (name hiredate enddate) (apply values x))
+    (define-values (hiredate enddate) (apply values x))
     (years-between hiredate enddate)))
 
 (define (per-year l)
@@ -50,24 +51,23 @@
 (define (average l)
   (exact->inexact (/ (apply + l) (length l))))
 
-(define (normalize h)
+(define (employment-dates h)
   (for/list (((k v) (in-hash h))
              #:unless (or (good-date? (get-date v 'hiredate))
                           (good-date? (get-date v 'enddate))))
-    (list k
-          (get-date v 'hiredate)
+    (list (get-date v 'hiredate)
           (get-date v 'enddate))))
 
 (define hired-data (get-response "/hired"))
 (define alums-data (get-response "/alums"))
 
-(define hired-output (normalize hired-data))
-(define alums-output (normalize alums-data))
+(define hired-output (employment-dates hired-data))
+(define alums-output (employment-dates alums-data))
 (define all-output (append hired-output alums-output))
 
-(define hdata (service-length hired-output))
-(define adata (service-length alums-output))
-(define xdata (service-length all-output))
+(define hdata (tenure hired-output))
+(define adata (tenure alums-output))
+(define xdata (tenure all-output))
 
 (for/list ((c (in-list (list (cons "Hired" hdata)
                              (cons "Alums" adata)
