@@ -5,7 +5,7 @@
          racket/date)
 (date-display-format 'iso-8601)
 
-(define (dump x) (printf "~a~%" x))
+(define (dump a b) (printf "~a ~a~%" a b))
 
 (define (string->date date)
   (define ymd-string-list (string-split date "-" #:repeat? #t))
@@ -16,9 +16,9 @@
 (define default-date "2001-01-01")
 (define today (date->string (current-date)))
 (define (years-between hired end)
-  (exact->inexact (abs (/ (- (date->seconds hired)
-                             (date->seconds end))
-                          31536000))))
+  (abs (/ (- (date->seconds hired)
+             (date->seconds end))
+          31536000)))
 
 (define (get-response uri)
   (define-values (status header response)
@@ -34,6 +34,18 @@
   (for/list (((x) (in-list l)))
     (define-values (name hiredate enddate) (apply values x))
     (years-between hiredate enddate)))
+
+(define (per-year l)
+  (group-by (λ(x) (floor x)) (sort l <)))
+
+(define (per-count l)
+  (for/list (((x) (in-list l)))
+    ;(list (round (floor (first x)))
+    (length x)))
+
+(define (year-split x i)
+  (define y (per-count (per-year x)))
+  (exact->inexact (/ (apply + (take y i)) (apply + y))))
 
 (define (average l)
   (exact->inexact (/ (apply + l) (length l))))
@@ -53,6 +65,12 @@
 (define alums-output (normalize alums-data))
 (define all-output (append hired-output alums-output))
 
-(for/list ((x (in-list (list hired-output alums-output all-output))))
-  (dump (average (service-length x))))
+(define hdata (service-length hired-output))
+(define adata (service-length alums-output))
+(define xdata (service-length all-output))
 
+(for/list ((x (in-list (list hdata adata xdata)))) 
+  (dump "Average:" (average x))
+  (dump "By year:" (per-count (per-year x)))
+  (dump "3 split:" (year-split x 3))
+  (printf "~%"))
