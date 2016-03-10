@@ -17,8 +17,8 @@
 (define today (date->string (current-date)))
 (define (years-between hired end)
   (exact->inexact (abs (/ (- (date->seconds hired)
-                        (date->seconds end))
-                     31536000))))
+                             (date->seconds end))
+                          31536000))))
 
 (define (get-response uri)
   (define-values (status header response)
@@ -30,6 +30,14 @@
 (define (good-date? property)
   (equal? default-date property))
 
+(define (service-length l)
+  (for/list (((x) (in-list l)))
+    (define-values (name hiredate enddate) (apply values x))
+    (years-between hiredate enddate)))
+
+(define (average l)
+  (exact->inexact (/ (apply + l) (length l))))
+
 (define (normalize h)
   (for/list (((k v) (in-hash h))
              #:unless (or (good-date? (get-date v 'hiredate))
@@ -39,21 +47,12 @@
           (get-date v 'enddate))))
 
 (define hired-data (get-response "/hired"))
-(define alum-data (get-response "/alums"))
+(define alums-data (get-response "/alums"))
 
 (define hired-output (normalize hired-data))
-(define alum-output (normalize alum-data))
+(define alums-output (normalize alums-data))
+(define all-output (append hired-output alums-output))
 
-(define all (append hired-output alum-output))
-
-(define (years l)
-  (for/list (((x) (in-list l)))
-      (years-between (third x) (second x))))
-
-(define (average l)
-  (exact->inexact (/ (apply + l) (length l))))
- 
-(define ylist (years all))
-
-(dump (average ylist))
+(for/list ((x (in-list (list hired-output alums-output all-output))))
+  (dump (average (service-length x))))
 
