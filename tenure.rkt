@@ -4,6 +4,8 @@
          net/http-client
          racket/date)
 
+(provide average)
+
 (date-display-format 'iso-8601)
 
 (define (dump a b) (printf "~a ~a~%" a b))
@@ -41,7 +43,6 @@
 
 (define (per-count l)
   (for/list (((x) (in-list l)))
-    ;(list (round (floor (first x)))
     (length x)))
 
 (define (year-split x i)
