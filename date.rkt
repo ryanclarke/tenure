@@ -28,17 +28,17 @@
 (define (good-date? property)
   (equal? default-date property))
 
-(provide tenure)
-(define (tenure l)
-  (for/list (((x) (in-list l)))
-    (define-values (hiredate enddate) (apply values x))
-    (years-between hiredate enddate)))
-
-(provide employment-dates)
 (define (employment-dates h)
   (for/list (((k v) (in-hash h))
              #:unless (or (good-date? (get-date v 'hiredate))
                           (good-date? (get-date v 'enddate))))
     (list (get-date v 'hiredate)
           (get-date v 'enddate))))
+
+(provide tenure)
+(define (tenure h)
+  (define l (employment-dates h))
+  (for/list (((x) (in-list l)))
+    (define-values (hiredate enddate) (apply values x))
+    (years-between hiredate enddate)))
 

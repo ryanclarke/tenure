@@ -1,6 +1,7 @@
 #lang racket
 
-(require "api.rkt"
+(require racket/hash
+         "api.rkt"
          "date.rkt")
 
 (provide (all-defined-out))
@@ -24,19 +25,13 @@
 (define (average l)
   (exact->inexact (/ (apply + l) (length l))))
 
-(define hired-output (employment-dates hired-data))
-(define alums-output (employment-dates alums-data))
-(define all-output (append hired-output alums-output))
+(define data-sets
+  (hash "Hired" hired-data
+        "Alums" alums-data
+        "Everyone" (hash-union hired-data alums-data)))
 
-(define hdata (tenure hired-output))
-(define adata (tenure alums-output))
-(define xdata (tenure all-output))
-
-(for/list ((c (in-list (list (cons "Hired" hdata)
-                             (cons "Alums" adata)
-                             (cons "Everyone" xdata)))))
-  (define title (car c))
-  (define data (cdr c))
+(for/list (((title data-set) (in-hash data-sets)))
+  (define data (tenure data-set))
   (printf "Data set '~a'~%" title)
   (dump "Average:" (average data))
   (dump "By year:" (by-year data))
